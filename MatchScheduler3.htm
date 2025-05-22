@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Doubles Match Scheduler - IBM</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600&display=swap');
+    body {
+      font-family: 'Barlow Condensed', sans-serif;
+      background: #1b1b1b;
+      color: white;
+      padding: 20px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1, h2, h3 {
+      text-align: center;
+      color: #ffffff;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    button {
+      background: #007acc;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      font-size: 16px;
+      margin: 5px 5px 10px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .match-box {
+      background: #2c2c2c;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border-left: 5px solid #00cc99;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    }
+    .match-header {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #00cc99;
+      font-size: 18px;
+    }
+    .checkbox-list {
+      columns: 3;
+      max-width: 100%;
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 16px;
+    }
+    .confirm-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 5px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  float: right;
+  margin-top: -40px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  text-align: center;
+}
+
+    .badge.confirmed {
+      background-color: #28a745;
+      color: white;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 12px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 3px 12px;
+  margin-top: 10px;
+  margin-left: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  float: right;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+}
+
+    #logo {
+      display: block;
+      margin: 20px auto 40px;
+      max-width: 150px;
+    }
+    .section-header {
+      background: #292929;
+      padding: 10px 20px;
+      border-left: 5px solid #00cc99;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<img id="logo" src="/mnt/data/IBM Logo.png" alt="IBM Logo" />
+<h1>Doubles Match Scheduler</h1>
+
+<div class="section-header">
+  <h3>✅ Select Available Players:</h3>
+</div>
+<div>
+  <button onclick="selectAll()">Select All</button>
+  <button onclick="unselectAll()">Unselect All</button>
+  <button onclick="resetMatches()">Reset All Matches</button>
+  <button onclick="clearConfirmed()">Clear Confirmed Matches</button>
+</div>
+
+<div id="playerList" class="checkbox-list"></div>
+
+<button onclick="generateMatch()">Generate Match</button>
+
+<h2 class="section-header">Generated Matches</h2>
+<div id="matches"></div>
+
+<h2 class="section-header">✅ Confirmed Matches</h2>
+<div id="confirmedMatches"></div>
+
+
+<script>
+const players = ["Agin","Bayu","Didit","Eroy","Faishal","Fahmi","Idan","Ikhsan","Irfan","Irsyad",
+"Jalu","Jericho","Karim","Leo","Masjidi","Prasoon","Priyanto","Rifki","Rizki",
+"Rizky","Seto","Syamil","Toto","Umar","Yusuf","Zaki"].sort();
+
+const initialPastMatches = [
+  ["Irfan","Prasoon"],["Jalu","Jericho"],["Irfan","Jericho"],["Yusuf","Rizki"],
+  ["Idan","Syamil"],["Yusuf","Zaki"],["Didit","Syamil"],["Idan","Fahmi"],
+  ["Zaki","Faishal"],["Irsyad","Masjidi"],["Toto","Fahmi"],["Seto","Syamil"],
+  ["Yusuf","Bayu"],["Fahmi","Faishal"],["Jalu","Yusuf"],["Didit","Bayu"],
+  ["Seto","Bayu"],["Toto","Rizky"],["Syamil","Karim"],["Yusuf","Didit"],
+  ["Priyanto","Zaki"],["Idan","Rizky"],["Toto","Yusuf"],["Eroy","Faishal"],
+  ["Jalu","Eroy"],["Karim","Jalu"],["Zaki","Didit"],["Karim","Prasoon"],
+  ["Masjidi","Bayu"],["Irsyad","Toto"],["Prasoon","Syamil"],["Fahmi","Didit"],
+  ["Faishal","Yusuf"],["Toto","Faishal"],["Idan","Didit"],["Toto","Seto"],
+  ["Rizki","Fahmi"],["Idan","Zaki"],["Karim","Idan"],["Seto","Prasoon"],
+  ["Rizki","Jalu"],["Toto","Seto"],["Faisal","Fahmi"],["Fahmi","Bayu"]
+];
+
+const pastPairSet = new Set();
+const savedConfirmed = JSON.parse(localStorage.getItem("confirmedPairs") || "[]");
+savedConfirmed.forEach(k => pastPairSet.add(k));
+initialPastMatches.forEach(([a, b]) => pastPairSet.add(pairKey(a, b)));
+
+let matchCount = 0;
+
+const playerListDiv = document.getElementById("playerList");
+players.forEach(name => {
+  const id = `p_${name}`;
+  const label = document.createElement("label");
+  label.innerHTML = `<input type="checkbox" id="${id}" value="${name}" checked> ${name}`;
+  playerListDiv.appendChild(label);
+});
+
+function selectAll() { players.forEach(n => document.getElementById(`p_${n}`).checked = true); }
+function unselectAll() { players.forEach(n => document.getElementById(`p_${n}`).checked = false); }
+function clearConfirmed() {
+  if (confirm("Clear only confirmed matches?")) {
+    localStorage.removeItem("confirmedPairs");
+    updateConfirmedDisplay();
+  }
+}
+function resetMatches() {
+  if (confirm("Reset all matches? This clears confirmed matches too.")) {
+    pastPairSet.clear();
+    matchCount = 0;
+    localStorage.removeItem("confirmedPairs");
+    document.getElementById("matches").innerHTML = "";
+    document.getElementById("confirmedMatches").innerHTML = "";
+  }
+}
+function getAvailablePlayers() {
+  return players.filter(name => document.getElementById(`p_${name}`).checked);
+}
+function pairKey(p1, p2) {
+  return [p1, p2].sort().join('|');
+}
+function hasPartnered(p1, p2) {
+  return pastPairSet.has(pairKey(p1, p2));
+}
+function savePair(p1, p2) {
+  pastPairSet.add(pairKey(p1, p2));
+}
+function confirmPair(p1, p2) {
+  const key = pairKey(p1, p2);
+  const confirmed = new Set(JSON.parse(localStorage.getItem("confirmedPairs") || "[]"));
+  confirmed.add(key);
+  localStorage.setItem("confirmedPairs", JSON.stringify(Array.from(confirmed)));
+}
+function deleteConfirmedMatch(key1, key2) {
+  const confirmed = new Set(JSON.parse(localStorage.getItem("confirmedPairs") || "[]"));
+  confirmed.delete(key1);
+  confirmed.delete(key2);
+  localStorage.setItem("confirmedPairs", JSON.stringify(Array.from(confirmed)));
+  updateConfirmedDisplay();
+}
+function updateConfirmedDisplay() {
+  const confirmedList = JSON.parse(localStorage.getItem("confirmedPairs") || "[]");
+  const container = document.getElementById("confirmedMatches");
+  container.innerHTML = "";
+  const grouped = [];
+  for (let i = 0; i < confirmedList.length; i += 2) {
+    if (i + 1 < confirmedList.length) {
+      const [a1, a2] = confirmedList[i].split('|');
+      const [b1, b2] = confirmedList[i + 1].split('|');
+      grouped.push([[a1, a2], [b1, b2], confirmedList[i], confirmedList[i + 1]]);
+    }
+  }
+  grouped.forEach(([[a1, a2], [b1, b2], key1, key2], index) => {
+    const div = document.createElement("div");
+    div.className = "match-box";
+    div.innerHTML = `
+      <div class="match-header">
+        Confirmed Match #${index + 1}
+        <span class="badge confirmed">Confirmed</span>
+        <button class="delete-btn" onclick="deleteConfirmedMatch('${key1}', '${key2}')">🗑️ Delete</button>
+      </div>
+      🟦 Team 1: ${a1} & ${a2}<br>
+      🟥 Team 2: ${b1} & ${b2}
+    `;
+    container.appendChild(div);
+  });
+}
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function generateMatch() {
+  const available = getAvailablePlayers();
+  const output = document.getElementById("matches");
+  if (available.length < 4) {
+    const div = document.createElement("div");
+    div.className = "match-box";
+    div.style.borderLeftColor = 'orange';
+    div.innerHTML = `<div class="match-header">Match Skipped</div>⚠️ Need at least 4 available players.`;
+    output.prepend(div);
+    return;
+  }
+  const validPairs = [];
+  for (let i = 0; i < available.length; i++) {
+    for (let j = i + 1; j < available.length; j++) {
+      const p1 = available[i], p2 = available[j];
+      if (!hasPartnered(p1, p2)) validPairs.push([p1, p2]);
+    }
+  }
+  shuffle(validPairs);
+  for (let i = 0; i < validPairs.length; i++) {
+    for (let j = i + 1; j < validPairs.length; j++) {
+      const [a1, a2] = validPairs[i], [b1, b2] = validPairs[j];
+      if (new Set([a1, a2, b1, b2]).size === 4) {
+        matchCount++;
+        savePair(a1, a2);
+        savePair(b1, b2);
+        const div = document.createElement("div");
+        div.className = "match-box";
+        div.innerHTML = `
+          <div class="match-header">
+            Match #${matchCount} <span class="badge confirmed" style="display:none;">Confirmed</span>
+          </div>
+          🟦 Team 1: ${a1} & ${a2}<br>
+          🟥 Team 2: ${b1} & ${b2}
+          <button class="confirm-btn" onclick="confirmMatch('${a1}', '${a2}', '${b1}', '${b2}', this)">Confirm</button>
+        `;
+        output.prepend(div);
+        return;
+      }
+    }
+  }
+  const div = document.createElement("div");
+  div.className = "match-box";
+  div.style.borderLeftColor = 'red';
+  div.innerHTML = `<div class="match-header">Match Failed</div>No valid match found.`;
+  output.prepend(div);
+}
+function confirmMatch(a1, a2, b1, b2, btn) {
+  confirmPair(a1, a2);
+  confirmPair(b1, b2);
+  btn.remove();
+  btn.parentElement.querySelector(".badge.confirmed").style.display = "inline-block";
+  updateConfirmedDisplay();
+}
+updateConfirmedDisplay();
+</script>
+
+</body>
+</html>
