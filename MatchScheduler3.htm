@@ -1,299 +1,282 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Doubles Match Scheduler - IBM</title>
+  <meta charset="UTF-8">
+  <title>Doubles Match Scheduler</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600&display=swap');
     body {
-      font-family: 'Barlow Condensed', sans-serif;
-      background: #1b1b1b;
+      background-color: #1e1e1e;
       color: white;
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-    h1, h2, h3 {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 30px;
       text-align: center;
+    }
+    h1, h2 {
       color: #ffffff;
-      font-weight: 600;
-      letter-spacing: 1px;
     }
-    button {
-      background: #007acc;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      font-size: 16px;
-      margin: 5px 5px 10px 0;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: 'Barlow Condensed', sans-serif;
+    .section {
+      margin-top: 30px;
     }
-    .match-box {
-      background: #2c2c2c;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      border-left: 5px solid #00cc99;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    .players {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 20px;
     }
-    .match-header {
-      font-weight: 600;
-      margin-bottom: 5px;
-      color: #00cc99;
-      font-size: 18px;
-    }
-    .checkbox-list {
-      columns: 3;
-      max-width: 100%;
-      margin-bottom: 10px;
+    .column {
+      display: flex;
+      flex-direction: column;
     }
     label {
-      display: block;
-      margin-bottom: 3px;
-      font-size: 16px;
+      margin-bottom: 5px;
     }
-    .confirm-btn {
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 5px 20px;
-  cursor: pointer;
-  border-radius: 4px;
-  float: right;
-  margin-top: -40px;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 16px;
-  text-align: center;
-}
-
-    .badge.confirmed {
-      background-color: #28a745;
+    button {
+      margin: 5px 5px 5px 0;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      background-color: #007acc;
       color: white;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 12px;
-      margin-left: 10px;
-      vertical-align: middle;
+      border-radius: 4px;
+      cursor: pointer;
     }
-    .delete-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 3px 12px;
-  margin-top: 10px;
-  margin-left: 10px;
-  cursor: pointer;
-  border-radius: 4px;
-  float: right;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 14px;
-}
-
-    #logo {
-      display: block;
-      margin: 20px auto 40px;
-      max-width: 150px;
+    button:hover {
+      background-color: #005fa3;
     }
-    .section-header {
-      background: #292929;
-      padding: 10px 20px;
-      border-left: 5px solid #00cc99;
-      margin-top: 40px;
+    .match-box {
+      background-color: #2a2a2a;
+      padding: 10px;
+      margin: 10px auto;
+      border-left: 5px solid #00c2a8;
+      width: 300px;
+      text-align: left;
+    }
+    .status-message {
+      color: #ffdd57;
+      font-weight: bold;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-<img id="logo" src="/mnt/data/IBM Logo.png" alt="IBM Logo" />
 <h1>Doubles Match Scheduler</h1>
 
-<div class="section-header">
-  <h3>✅ Select Available Players:</h3>
-</div>
-<div>
+<div class="section">
+  <label><strong>✅ Select Available Players:</strong></label><br>
   <button onclick="selectAll()">Select All</button>
   <button onclick="unselectAll()">Unselect All</button>
   <button onclick="resetMatches()">Reset All Matches</button>
-  <button onclick="clearConfirmed()">Clear Confirmed Matches</button>
+  <button onclick="clearConfirmedMatches()">Clear Confirmed Matches</button>
 </div>
 
-<div id="playerList" class="checkbox-list"></div>
+<div class="players" id="playerList"></div>
 
 <button onclick="generateMatch()">Generate Match</button>
+<div class="status-message" id="statusMessage"></div>
 
-<h2 class="section-header">Generated Matches</h2>
-<div id="matches"></div>
+<div class="section">
+  <h2>🟠 Potential Matches</h2>
+  <div id="potentialMatches"></div>
+</div>
 
-<h2 class="section-header">✅ Confirmed Matches</h2>
-<div id="confirmedMatches"></div>
-
+<div class="section">
+  <h2>✅ Confirmed Matches</h2>
+  <div id="confirmedMatches"></div>
+</div>
 
 <script>
-const players = ["Agin","Bayu","Didit","Eroy","Faishal","Fahmi","Idan","Ikhsan","Irfan","Irsyad",
-"Jalu","Jericho","Karim","Leo","Masjidi","Prasoon","Priyanto","Rifki","Rizki",
-"Rizky","Seto","Syamil","Toto","Umar","Yusuf","Zaki"].sort();
+  const allPlayers = [
+    "Agin", "Bayu", "Didit", "Eroy", "Fahmi", "Faishal", "Idan", "Ikhsan", "Irfan",
+    "Irsyad", "Jalu", "Jericho", "Karim", "Leo", "Masjidi", "Prasoon", "Priyanto", "Rifki",
+    "Rizki", "Rizky", "Seto", "Syamil", "Toto", "Umar", "Yusuf", "Zaki"
+  ];
 
-const initialPastMatches = [
-  ["Irfan","Prasoon"],["Jalu","Jericho"],["Irfan","Jericho"],["Yusuf","Rizki"],
-  ["Idan","Syamil"],["Yusuf","Zaki"],["Didit","Syamil"],["Idan","Fahmi"],
-  ["Zaki","Faishal"],["Irsyad","Masjidi"],["Toto","Fahmi"],["Seto","Syamil"],
-  ["Yusuf","Bayu"],["Fahmi","Faishal"],["Jalu","Yusuf"],["Didit","Bayu"],
-  ["Seto","Bayu"],["Toto","Rizky"],["Syamil","Karim"],["Yusuf","Didit"],
-  ["Priyanto","Zaki"],["Idan","Rizky"],["Toto","Yusuf"],["Eroy","Faishal"],
-  ["Jalu","Eroy"],["Karim","Jalu"],["Zaki","Didit"],["Karim","Prasoon"],
-  ["Masjidi","Bayu"],["Irsyad","Toto"],["Prasoon","Syamil"],["Fahmi","Didit"],
-  ["Faishal","Yusuf"],["Toto","Faishal"],["Idan","Didit"],["Toto","Seto"],
-  ["Rizki","Fahmi"],["Idan","Zaki"],["Karim","Idan"],["Seto","Prasoon"],
-  ["Rizki","Jalu"],["Toto","Seto"],["Faisal","Fahmi"],["Fahmi","Bayu"]
-];
+  const csvData = `25-Apr-2025,Irfan/Prasoon,Yusuf/Toto,30-22
+25-Apr-2025,Jalu/Jericho,Faishal/Eroy,30-21
+25-Apr-2025,Irfan/Jericho,Eroy/Jalu,30-7
+02-May-2025,Yusuf/Rizki,Jalu/Karim,31-29
+02-May-2025,Idan/Syamil,Didit/Zaki,35-34
+02-May-2025,Yusuf/Zaki,Prasoon/Karim,32-30
+02-May-2025,Didit/Syamil,Bayu/Masjidi,30-22
+02-May-2025,Idan/Fahmi,Toto/Irsyad,30-26
+02-May-2025,Zaki/Faishal,Syamil/Prasoon,22-30
+02-May-2025,Irsyad/Masjidi,Didit/Fahmi,20-30
+02-May-2025,Toto/Fahmi,Yusuf/Faishal,22-30
+09-May-2025,Seto/Syamil,Faishal/Toto,30-22
+09-May-2025,Yusuf/Bayu,Didit/Idan,30-18
+09-May-2025,Fahmi/Faishal,Seto/Toto,30-22
+09-May-2025,Jalu/Yusuf,Fahmi/Rizki,19-30
+16-May-2025,Didit/Bayu,Zaki/Idan,30-27
+16-May-2025,Seto/Bayu,Idan/Karim,30-20
+16-May-2025,Toto/Rizky,Prasoon/Seto,14-30
+16-May-2025,Syamil/Karim,Jalu/Rizki,30-13
+16-May-2025,Yusuf/Didit,Seto/Toto,30-32
+16-May-2025,Priyanto/Zaki,Fahmi/Faisal,27-30
+16-May-2025,Idan/Rizky,Bayu/Fahmi,19-30
+23-May-2025,Idan/Bayu,Prasoon/Zaki,25-31
+23-May-2025,Didit/Rizky,Seto/Yusuf,16-30
+23-May-2025,Rizki/Zaki,Idan/Rizky,31-29
+23-May-2025,Jalu/Masjidi,Bayu/Rizki,33-31
+23-May-2025,Bayu/Prasoon,Syamil/Zaki,16-30`;
 
-const pastPairSet = new Set();
-const savedConfirmed = JSON.parse(localStorage.getItem("confirmedPairs") || "[]");
-savedConfirmed.forEach(k => pastPairSet.add(k));
-initialPastMatches.forEach(([a, b]) => pastPairSet.add(pairKey(a, b)));
-
-let matchCount = 0;
-
-const playerListDiv = document.getElementById("playerList");
-players.forEach(name => {
-  const id = `p_${name}`;
-  const label = document.createElement("label");
-  label.innerHTML = `<input type="checkbox" id="${id}" value="${name}" checked> ${name}`;
-  playerListDiv.appendChild(label);
-});
-
-function selectAll() { players.forEach(n => document.getElementById(`p_${n}`).checked = true); }
-function unselectAll() { players.forEach(n => document.getElementById(`p_${n}`).checked = false); }
-function clearConfirmed() {
-  if (confirm("Clear only confirmed matches?")) {
-    localStorage.removeItem("confirmedPairs");
-    updateConfirmedDisplay();
-  }
-}
-function resetMatches() {
-  if (confirm("Reset all matches? This clears confirmed matches too.")) {
-    pastPairSet.clear();
-    matchCount = 0;
-    localStorage.removeItem("confirmedPairs");
-    document.getElementById("matches").innerHTML = "";
-    document.getElementById("confirmedMatches").innerHTML = "";
-  }
-}
-function getAvailablePlayers() {
-  return players.filter(name => document.getElementById(`p_${name}`).checked);
-}
-function pairKey(p1, p2) {
-  return [p1, p2].sort().join('|');
-}
-function hasPartnered(p1, p2) {
-  return pastPairSet.has(pairKey(p1, p2));
-}
-function savePair(p1, p2) {
-  pastPairSet.add(pairKey(p1, p2));
-}
-function confirmPair(p1, p2) {
-  const key = pairKey(p1, p2);
-  const confirmed = new Set(JSON.parse(localStorage.getItem("confirmedPairs") || "[]"));
-  confirmed.add(key);
-  localStorage.setItem("confirmedPairs", JSON.stringify(Array.from(confirmed)));
-}
-function deleteConfirmedMatch(key1, key2) {
-  const confirmed = new Set(JSON.parse(localStorage.getItem("confirmedPairs") || "[]"));
-  confirmed.delete(key1);
-  confirmed.delete(key2);
-  localStorage.setItem("confirmedPairs", JSON.stringify(Array.from(confirmed)));
-  updateConfirmedDisplay();
-}
-function updateConfirmedDisplay() {
-  const confirmedList = JSON.parse(localStorage.getItem("confirmedPairs") || "[]");
-  const container = document.getElementById("confirmedMatches");
-  container.innerHTML = "";
-  const grouped = [];
-  for (let i = 0; i < confirmedList.length; i += 2) {
-    if (i + 1 < confirmedList.length) {
-      const [a1, a2] = confirmedList[i].split('|');
-      const [b1, b2] = confirmedList[i + 1].split('|');
-      grouped.push([[a1, a2], [b1, b2], confirmedList[i], confirmedList[i + 1]]);
-    }
-  }
-  grouped.forEach(([[a1, a2], [b1, b2], key1, key2], index) => {
-    const div = document.createElement("div");
-    div.className = "match-box";
-    div.innerHTML = `
-      <div class="match-header">
-        Confirmed Match #${index + 1}
-        <span class="badge confirmed">Confirmed</span>
-        <button class="delete-btn" onclick="deleteConfirmedMatch('${key1}', '${key2}')">🗑️ Delete</button>
-      </div>
-      🟦 Team 1: ${a1} & ${a2}<br>
-      🟥 Team 2: ${b1} & ${b2}
-    `;
-    container.appendChild(div);
+  const partnerHistory = {};
+  csvData.trim().split("\n").forEach(row => {
+    const [, team1, team2] = row.split(",");
+    [team1, team2].forEach(team => {
+      const [p1, p2] = team.trim().split("/").map(p => p.trim());
+      if (!partnerHistory[p1]) partnerHistory[p1] = new Set();
+      if (!partnerHistory[p2]) partnerHistory[p2] = new Set();
+      partnerHistory[p1].add(p2);
+      partnerHistory[p2].add(p1);
+    });
   });
-}
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-function generateMatch() {
-  const available = getAvailablePlayers();
-  const output = document.getElementById("matches");
-  if (available.length < 4) {
-    const div = document.createElement("div");
-    div.className = "match-box";
-    div.style.borderLeftColor = 'orange';
-    div.innerHTML = `<div class="match-header">Match Skipped</div>⚠️ Need at least 4 available players.`;
-    output.prepend(div);
-    return;
-  }
-  const validPairs = [];
-  for (let i = 0; i < available.length; i++) {
-    for (let j = i + 1; j < available.length; j++) {
-      const p1 = available[i], p2 = available[j];
-      if (!hasPartnered(p1, p2)) validPairs.push([p1, p2]);
-    }
-  }
-  shuffle(validPairs);
-  for (let i = 0; i < validPairs.length; i++) {
-    for (let j = i + 1; j < validPairs.length; j++) {
-      const [a1, a2] = validPairs[i], [b1, b2] = validPairs[j];
-      if (new Set([a1, a2, b1, b2]).size === 4) {
-        matchCount++;
-        savePair(a1, a2);
-        savePair(b1, b2);
-        const div = document.createElement("div");
-        div.className = "match-box";
-        div.innerHTML = `
-          <div class="match-header">
-            Match #${matchCount} <span class="badge confirmed" style="display:none;">Confirmed</span>
-          </div>
-          🟦 Team 1: ${a1} & ${a2}<br>
-          🟥 Team 2: ${b1} & ${b2}
-          <button class="confirm-btn" onclick="confirmMatch('${a1}', '${a2}', '${b1}', '${b2}', this)">Confirm</button>
-        `;
-        output.prepend(div);
-        return;
+
+  const playerList = document.getElementById("playerList");
+  const potentialMatchesDiv = document.getElementById("potentialMatches");
+  const confirmedMatchesDiv = document.getElementById("confirmedMatches");
+  const statusMessage = document.getElementById("statusMessage");
+
+  const potentialMatches = JSON.parse(localStorage.getItem("potentialMatches") || "[]");
+  const confirmedMatches = JSON.parse(localStorage.getItem("confirmedMatches") || "[]");
+
+  function initPlayerList() {
+    playerList.innerHTML = "";
+    const cols = 3;
+    const chunkSize = Math.ceil(allPlayers.length / cols);
+    for (let c = 0; c < cols; c++) {
+      const colDiv = document.createElement("div");
+      colDiv.className = "column";
+      for (let i = c * chunkSize; i < (c + 1) * chunkSize && i < allPlayers.length; i++) {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" value="${allPlayers[i]}" checked> ${allPlayers[i]}`;
+        colDiv.appendChild(label);
       }
+      playerList.appendChild(colDiv);
     }
   }
-  const div = document.createElement("div");
-  div.className = "match-box";
-  div.style.borderLeftColor = 'red';
-  div.innerHTML = `<div class="match-header">Match Failed</div>No valid match found.`;
-  output.prepend(div);
-}
-function confirmMatch(a1, a2, b1, b2, btn) {
-  confirmPair(a1, a2);
-  confirmPair(b1, b2);
-  btn.remove();
-  btn.parentElement.querySelector(".badge.confirmed").style.display = "inline-block";
-  updateConfirmedDisplay();
-}
-updateConfirmedDisplay();
+
+  function selectAll() {
+    document.querySelectorAll("#playerList input[type=checkbox]").forEach(cb => cb.checked = true);
+  }
+
+  function unselectAll() {
+    document.querySelectorAll("#playerList input[type=checkbox]").forEach(cb => cb.checked = false);
+  }
+
+  function resetMatches() {
+    localStorage.removeItem("potentialMatches");
+    localStorage.removeItem("confirmedMatches");
+    location.reload();
+  }
+
+  function clearConfirmedMatches() {
+    localStorage.removeItem("confirmedMatches");
+    location.reload();
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function arraysEqual(a, b) {
+    return a.length === b.length && a.every((val, i) => val === b[i]);
+  }
+
+  function matchExistsInList(list, teamA, teamB) {
+    const ta = [...teamA].sort();
+    const tb = [...teamB].sort();
+    return list.some(m => {
+      const mA = [...m.teamA].sort();
+      const mB = [...m.teamB].sort();
+      return (arraysEqual(mA, ta) && arraysEqual(mB, tb)) ||
+             (arraysEqual(mA, tb) && arraysEqual(mB, ta));
+    });
+  }
+
+  function generateMatch() {
+    statusMessage.textContent = "";
+    const selected = [...document.querySelectorAll("#playerList input[type=checkbox]:checked")].map(cb => cb.value);
+    if (selected.length < 4) {
+      statusMessage.textContent = "⚠️ Select at least 4 players.";
+      return;
+    }
+
+    const pool = [...selected];
+    shuffle(pool);
+
+    function findValidPair(players) {
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const a = players[i], b = players[j];
+          if (!partnerHistory[a]?.has(b)) {
+            return [a, b];
+          }
+        }
+      }
+      return null;
+    }
+
+    const pairA = findValidPair(pool);
+    if (!pairA) {
+      statusMessage.textContent = "⚠️ No valid first pair found.";
+      return;
+    }
+    pool.splice(pool.indexOf(pairA[0]), 1);
+    pool.splice(pool.indexOf(pairA[1]), 1);
+
+    const pairB = findValidPair(pool);
+    if (!pairB) {
+      statusMessage.textContent = "⚠️ No valid second pair found.";
+      return;
+    }
+
+    if (matchExistsInList(potentialMatches, pairA, pairB) || matchExistsInList(confirmedMatches, pairA, pairB)) {
+      statusMessage.textContent = "⚠️ Match already exists in potential or confirmed list.";
+      return;
+    }
+
+    const match = { teamA: pairA, teamB: pairB };
+    potentialMatches.push(match);
+    localStorage.setItem("potentialMatches", JSON.stringify(potentialMatches));
+    renderMatches();
+  }
+
+  function confirmMatch(index) {
+    const match = potentialMatches.splice(index, 1)[0];
+    confirmedMatches.push(match);
+    localStorage.setItem("potentialMatches", JSON.stringify(potentialMatches));
+    localStorage.setItem("confirmedMatches", JSON.stringify(confirmedMatches));
+    renderMatches();
+  }
+
+  function renderMatches() {
+    potentialMatchesDiv.innerHTML = "";
+    confirmedMatchesDiv.innerHTML = "";
+
+    potentialMatches.forEach((m, i) => {
+      const div = document.createElement("div");
+      div.className = "match-box";
+      div.innerHTML = `
+        <strong>Match ${i + 1}:</strong> ${m.teamA.join("/")} vs ${m.teamB.join("/")}<br>
+        <button onclick="confirmMatch(${i})">Confirm Match</button>`;
+      potentialMatchesDiv.appendChild(div);
+    });
+
+    confirmedMatches.forEach((m, i) => {
+      const div = document.createElement("div");
+      div.className = "match-box";
+      div.innerHTML = `<strong>Match ${i + 1}:</strong> ${m.teamA.join("/")} vs ${m.teamB.join("/")}`;
+      confirmedMatchesDiv.appendChild(div);
+    });
+  }
+
+  initPlayerList();
+  renderMatches();
 </script>
 
 </body>
